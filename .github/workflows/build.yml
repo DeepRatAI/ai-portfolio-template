@@ -117,20 +117,26 @@ jobs:
 
       - name: Vector index integrity check
         run: |
-          INDEX="kb/index/vector-index.json"
-          # Validate JSON
-          node -e "const idx = require('./$INDEX'); console.log('Chunks:', idx.length)" || {
-            echo "::error::vector-index.json is not valid JSON"
-            exit 1
-          }
+          node -e "
+            const data = require('./kb/index/vector-index.json');
+            const chunks = data.chunks || data;
+            console.log('Version:', data.version || 'N/A');
+            console.log('Created:', data.created || 'N/A');
+            console.log('Chunks:', chunks.length);
+            if (!chunks.length || chunks.length === 0) {
+              console.error('ERROR: No chunks found in vector index');
+              process.exit(1);
+            }
+            console.log('Vector index structure OK');
+          "
 
       - name: Embedding dimension check
         run: |
-          INDEX="kb/index/vector-index.json"
           node -e "
-            const idx = require('./$INDEX');
-            const dims = new Set(idx.map(c => c.embedding?.length));
-            console.log('Chunk count:', idx.length);
+            const data = require('./kb/index/vector-index.json');
+            const chunks = data.chunks || data;
+            const dims = new Set(chunks.map(c => c.embedding?.length));
+            console.log('Chunk count:', chunks.length);
             console.log('Embedding dimensions:', [...dims]);
             if (dims.size !== 1) {
               console.error('ERROR: Inconsistent embedding dimensions:', [...dims]);
@@ -141,26 +147,25 @@ jobs:
               console.error('ERROR: Expected 384-dim (MiniLM-L6-v2), got', dim);
               process.exit(1);
             }
-            const nullEmbeddings = idx.filter(c => !c.embedding || c.embedding.length === 0);
+            const nullEmbeddings = chunks.filter(c => !c.embedding || c.embedding.length === 0);
             if (nullEmbeddings.length > 0) {
               console.error('ERROR:', nullEmbeddings.length, 'chunks have null/empty embeddings');
               process.exit(1);
             }
-            console.log('All', idx.length, 'chunks have valid 384-dim embeddings');
+            console.log('All', chunks.length, 'chunks have valid 384-dim embeddings');
           "
 
       - name: Corpus-index sync check
         run: |
           node -e "
             const fs = require('fs');
-            const path = require('path');
-            const idx = require('./kb/index/vector-index.json');
+            const data = require('./kb/index/vector-index.json');
+            const chunks = data.chunks || data;
             const corpusDir = 'kb/sources/final';
             const corpusFiles = fs.readdirSync(corpusDir).filter(f => f.endsWith('.md'));
-            const indexSources = [...new Set(idx.map(c => c.source || c.filename))];
+            const indexSources = [...new Set(chunks.map(c => c.source || c.filename))];
             console.log('Corpus files:', corpusFiles);
             console.log('Index sources:', indexSources);
-            // Check that every index source has a corresponding corpus file
             const missing = indexSources.filter(s => !corpusFiles.includes(s));
             if (missing.length > 0) {
               console.error('WARNING: Index references files not in corpus:', missing);
@@ -172,8 +177,8 @@ jobs:
       - name: RAG retrieval smoke test
         run: |
           node -e "
-            const idx = require('./kb/index/vector-index.json');
-            // Verify cosine similarity function works
+            const data = require('./kb/index/vector-index.json');
+            const chunks = data.chunks || data;
             function cosineSim(a, b) {
               let dot = 0, normA = 0, normB = 0;
               for (let i = 0; i < a.length; i++) {
@@ -184,15 +189,15 @@ jobs:
               return dot / (Math.sqrt(normA) * Math.sqrt(normB));
             }
             // Self-similarity should be 1.0
-            const selfSim = cosineSim(idx[0].embedding, idx[0].embedding);
+            const selfSim = cosineSim(chunks[0].embedding, chunks[0].embedding);
             console.log('Self-similarity:', selfSim.toFixed(6));
             if (Math.abs(selfSim - 1.0) > 0.001) {
               console.error('ERROR: Self-similarity check failed');
               process.exit(1);
             }
             // Cross-chunk similarity should be < 1.0
-            if (idx.length > 1) {
-              const crossSim = cosineSim(idx[0].embedding, idx[1].embedding);
+            if (chunks.length > 1) {
+              const crossSim = cosineSim(chunks[0].embedding, chunks[1].embedding);
               console.log('Cross-chunk similarity:', crossSim.toFixed(6));
               if (crossSim >= 1.0) {
                 console.error('ERROR: Different chunks have identical embeddings');
