@@ -4,7 +4,7 @@ import {
   ExternalLink,
   Github,
   Star,
-  Clock,
+  Rocket,
   RefreshCw,
 } from "lucide-react";
 
@@ -55,9 +55,8 @@ const PROJECTS = [
       "Clinical dataset processing pipelines",
       "Autonomous research synthesis workflows",
     ],
-    github: "https://github.com/DeepRatAI",
-    badge: "coming-soon" as const,
-    comingSoon: "17/02/26",
+    github: "https://github.com/DeepRatAI/Clinical-Deep-Research_CDR",
+    badge: "just-released" as const,
   },
 ];
 
@@ -112,9 +111,9 @@ export function ProjectsSection() {
                           <RefreshCw className="h-3 w-3" /> Under Renovation
                         </span>
                       )}
-                      {project.badge === "coming-soon" && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold text-black shadow-lg">
-                          <Clock className="h-3 w-3" /> Coming Soon · {project.comingSoon}
+                      {project.badge === "just-released" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold text-white shadow-lg">
+                          <Rocket className="h-3 w-3" /> Just Released
                         </span>
                       )}
                     </div>
