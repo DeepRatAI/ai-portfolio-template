@@ -5,7 +5,7 @@ import {
   Github,
   Star,
   Rocket,
-  RefreshCw,
+
 } from "lucide-react";
 
 const PROJECTS = [
@@ -39,8 +39,8 @@ const PROJECTS = [
       "Source-grounded responses with citation",
       "Evaluation-first development methodology",
     ],
-    github: "https://github.com/DeepRatAI/Med-X-KimiK2-RAG",
-    badge: "updating" as const,
+    github: "https://github.com/DeepRatAI/MedX",
+    badge: "new-release" as const,
   },
   {
     slug: "cdr",
@@ -106,9 +106,9 @@ export function ProjectsSection() {
                           <Star className="h-3 w-3" /> Featured
                         </span>
                       )}
-                      {project.badge === "updating" && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold text-white shadow-lg">
-                          <RefreshCw className="h-3 w-3" /> Under Renovation
+                      {project.badge === "new-release" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold text-white shadow-lg">
+                          <Star className="h-3 w-3" /> New Release
                         </span>
                       )}
                       {project.badge === "just-released" && (
